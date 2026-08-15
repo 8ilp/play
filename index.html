@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة يوسف - سب واي</title>
+    <title>لعبة سيارات يوسف</title>
     <style>
         body {
             margin: 0;
@@ -18,9 +18,8 @@
             overflow: hidden;
         }
 
-        h1 { margin: 5px; color: #ffb703; font-size: 24px; }
+        h1 { margin: 5px; color: #ffb703; font-size: 22px; }
         
-        /* شاشة اللعبة */
         canvas {
             background: #222;
             border: 4px solid #ffb703;
@@ -28,143 +27,238 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
 
-        /* زر التحميل */
         #install-btn {
             background-color: #ffb703;
             color: #111;
             border: none;
-            padding: 10px 20px;
-            font-size: 16px;
+            padding: 8px 18px;
+            font-size: 14px;
             font-weight: bold;
             border-radius: 8px;
             cursor: pointer;
-            margin-top: 15px;
+            margin-top: 10px;
         }
         #install-btn:hover { background-color: #fb8500; }
     </style>
 </head>
 <body>
 
-    <h1>لعبة يوسف للركض</h1>
-    <p>استخدم أسهم لوحة المفاتيح (اليمين واليسار) لتغيير المسار وتفادي الحواجز!</p>
+    <h1>لعبة سيارات يوسف</h1>
+    <p>استخدم أسهم الكيبورد (يسار/يمين) لتغيير المسار، اجمع الفلوس وتفادى السيارات المعاكسة!</p>
 
-    <!-- لوحة اللعبة -->
     <canvas id="gameCanvas" width="400" height="500"></canvas>
-
-    <!-- زر التحميل -->
-    <button id="install-btn">تحميل اللعبة كطبيق</button>
+    <button id="install-btn">تحميل اللعبة كتطبيق</button>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        // إحداثيات اللاعب (يبدأ في المسار الأوسط)
         let player = {
             lane: 1, // 0: يسار، 1: وسط، 2: يمين
             x: 200,
-            y: 400,
-            width: 30,
-            height: 50,
-            color: "#ffb703"
+            y: 380,
+            width: 34,
+            height: 60,
+            color: "#3a86ff"
         };
 
-        const lanes = [100, 200, 300]; // أماكن المسارات الثلاثة بالعرض
+        const lanes = [110, 200, 290]; 
         let obstacles = [];
+        let coins = [];
         let score = 0;
+        let moneyCount = 0;
         let gameRunning = true;
         let speed = 4;
 
-        // التحكم بالأزرار (يمين ويسار)
+        // التحكم بالأسهم للسيارة، وزر Enter لإعادة اللعب عند الخسارة
         document.addEventListener("keydown", (e) => {
-            if (e.key === "ArrowRight" && player.lane < 2) {
-                player.lane++;
-            } else if (e.key === "ArrowLeft" && player.lane > 0) {
-                player.lane--;
+            if (gameRunning) {
+                if (e.key === "ArrowRight" && player.lane < 2) {
+                    player.lane++;
+                } else if (e.key === "ArrowLeft" && player.lane > 0) {
+                    player.lane--;
+                }
+            } else {
+                if (e.key === "Enter") {
+                    resetGame();
+                }
             }
         });
 
-        // إضافة حواجز عشوائية
-        function spawnObstacle() {
-            if (Math.random() < 0.02) {
+        function resetGame() {
+            player.lane = 1;
+            obstacles = [];
+            coins = [];
+            score = 0;
+            moneyCount = 0;
+            speed = 4;
+            gameRunning = true;
+        }
+
+        // توليد السيارات المعاكسة والفلوس بزيادة السرعة تدريجياً
+        function spawnElements() {
+            if (Math.random() < 0.025) {
                 let randomLane = Math.floor(Math.random() * 3);
+                // تباعد بسيط لمنع التصادم العشوائي فور ظهور السيارة
                 obstacles.push({
                     lane: randomLane,
-                    y: -50,
-                    width: 40,
-                    height: 40,
+                    y: -80,
+                    width: 34,
+                    height: 60,
                     color: "#e63946"
+                });
+            }
+
+            // توليد الفلوس
+            if (Math.random() < 0.02) {
+                let randomLane = Math.floor(Math.random() * 3);
+                coins.push({
+                    lane: randomLane,
+                    y: -30,
+                    size: 14
                 });
             }
         }
 
-        // تحديث رسومات وحركة اللعبة
         function update() {
             if (!gameRunning) return;
 
-            // تحريك اللاعب بسلاسة للمسار المطلوب
-            player.x += (lanes[player.lane] - player.x) * 0.2;
+            // زيادة السرعة تدريجياً مع الوقت
+            speed += 0.001;
 
-            // تحريك الحواجز للأسفل
+            // حركة سلسة للسيارة بين المسارات
+            player.x += (lanes[player.lane] - player.x) * 0.25;
+
+            // تحريك السيارات المعاكسة
             for (let i = 0; i < obstacles.length; i++) {
                 obstacles[i].y += speed;
 
-                // فحص الاصطدام (إذا الحواجز ضربت اللاعب)
+                // فحص الاصطدام بدقة (تصغير هامش الاصطدام قليلاً لمنع الموت الوهمي عند الأطراف)
+                let hitBoxMargin = 6;
                 if (
                     obstacles[i].lane === player.lane &&
-                    obstacles[i].y + obstacles[i].height > player.y &&
-                    obstacles[i].y < player.y + player.height
+                    obstacles[i].y + obstacles[i].height - hitBoxMargin > player.y + hitBoxMargin &&
+                    obstacles[i].y + hitBoxMargin < player.y + player.height - hitBoxMargin
                 ) {
                     gameRunning = false;
                 }
             }
 
-            // حذف الحواجز التي تجاوزت الشاشة وزيادة النقاط
+            // تحريك وجمع الفلوس
+            for (let i = 0; i < coins.length; i++) {
+                coins[i].y += speed;
+                if (
+                    coins[i].lane === player.lane &&
+                    coins[i].y + coins[i].size > player.y &&
+                    coins[i].y - coins[i].size < player.y + player.height
+                ) {
+                    moneyCount += 10; // زيادة الفلوس
+                    coins.splice(i, 1);
+                    i--;
+                }
+            }
+
+            // تنظيف العناصر التي تجاوزت الشاشة وزيادة النقاط
             obstacles = obstacles.filter(obs => {
                 if (obs.y > canvas.height) {
-                    score += 10;
+                    score += 5;
                     return false;
                 }
                 return true;
             });
 
-            spawnObstacle();
+            coins = coins.filter(c => c.y < canvas.height);
+
+            spawnElements();
+        }
+
+        // رسم تفاصيل السيارة (شكل سيارة حقيقي بـ Canvas)
+        function drawCar(x, y, color) {
+            ctx.save();
+            ctx.translate(x, y);
+            
+            // هيكل السيارة
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.roundRect(-17, -30, 34, 60, 8);
+            ctx.fill();
+
+            // الزجاج الأمامي والخلفي
+            ctx.fillStyle = "#111";
+            ctx.fillRect(-13, -15, 26, 15);
+            ctx.fillRect(-13, 10, 26, 10);
+
+            // الإطارات
+            ctx.fillStyle = "#000";
+            ctx.fillRect(-21, -20, 6, 14);
+            ctx.fillRect(15, -20, 6, 14);
+            ctx.fillRect(-21, 12, 6, 14);
+            ctx.fillRect(15, 12, 6, 14);
+
+            ctx.restore();
         }
 
         function draw() {
-            // تنظيف الشاشة
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // رسم مسارات الطريق (خطوط طولية)
+            // رسم مسارات الطريق
             ctx.strokeStyle = "#444";
             ctx.lineWidth = 2;
+            ctx.setLineDash([15, 15]);
             ctx.beginPath();
-            ctx.moveTo(150, 0); ctx.lineTo(150, canvas.height);
-            ctx.moveTo(250, 0); ctx.lineTo(250, canvas.height);
+            ctx.moveTo(155, 0); ctx.lineTo(155, canvas.height);
+            ctx.moveTo(245, 0); ctx.lineTo(245, canvas.height);
             ctx.stroke();
+            ctx.setLineDash([]);
 
-            // رسم اللاعب
-            ctx.fillStyle = player.color;
-            ctx.fillRect(player.x - player.width / 2, player.y, player.width, player.height);
-
-            // رسم الحواجز
-            for (let i = 0; i < obstacles.length; i++) {
-                ctx.fillStyle = obstacles[i].color;
-                ctx.fillRect(lanes[obstacles[i].lane] - obstacles[i].width / 2, obstacles[i].y, obstacles[i].width, obstacles[i].height);
+            // رسم الفلوس (عملات ذهبية دائمة)
+            for (let i = 0; i < coins.length; i++) {
+                ctx.fillStyle = "#ffb703";
+                ctx.beginPath();
+                ctx.arc(lanes[coins[i].lane], coins[i].y, coins[i].size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = "#d4af37";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // علامة العملة من الداخل
+                ctx.fillStyle = "#fff";
+                ctx.font = "bold 12px Tahoma";
+                ctx.fillText("$", lanes[coins[i].lane] - 4, coins[i].y + 4);
             }
 
-            // رسم النقاط
-            ctx.fillStyle = "#fff";
-            ctx.font = "18px Tahoma";
-            ctx.fillText("النقاط: " + score, 20, 30);
+            // رسم سيارة اللاعب
+            drawCar(player.x, player.y + player.height/2, player.color);
 
+            // رسم السيارات المعاكسة
+            for (let i = 0; i < obstacles.length; i++) {
+                drawCar(lanes[obstacles[i].lane], obstacles[i].y + obstacles[i].height/2, obstacles[i].color);
+            }
+
+            // لوحة العدادات والنقاط والفلوس بالأعلى
+            ctx.fillStyle = "#fff";
+            ctx.font = "15px Tahoma";
+            ctx.fillText("النقاط: " + score, 15, 25);
+            ctx.fillStyle = "#ffb703";
+            ctx.fillText("الفلوس: $" + moneyCount, 300, 25);
+
+            // شاشة الخسارة (مرتبة بدون تداخل وموضحة تماماً)
             if (!gameRunning) {
-                ctx.fillStyle = "rgba(0,0,0,0.8)";
+                ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = "#ffb703";
-                ctx.font = "28px Tahoma";
-                ctx.fillText("خسرت يا يوسف!", 100, 220);
+
+                ctx.fillStyle = "#e63946";
+                ctx.font = "bold 26px Tahoma";
+                ctx.fillText("إصطدمت السيارة!", 105, 200);
+
+                ctx.fillStyle = "#fff";
                 ctx.font = "16px Tahoma";
-                ctx.fillText("اضغط F5 لإعادة اللعب", 125, 270);
+                ctx.fillText("النقاط النهائية: " + score, 140, 245);
+                ctx.fillText("الفلوس المجمعة: $" + moneyCount, 130, 275);
+
+                ctx.fillStyle = "#ffb703";
+                ctx.font = "bold 18px Tahoma";
+                ctx.fillText("اضغط على زر (Enter) لإعادة اللعب", 75, 330);
             }
         }
 
@@ -176,7 +270,6 @@
 
         loop();
 
-        // زر التحميل
         document.getElementById("install-btn").addEventListener("click", () => {
             alert('لتثبيت اللعبة كتطبيق على جهازك، افتح قائمة المتصفح (النقاط الثلاث) واختار "تثبيت التطبيق" (Install app).');
         });
