@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سباوي من سوق الجمعه</title>
+    <title>لعبة سيارات يوسف</title>
     <style>
         body {
             margin: 0;
@@ -19,6 +19,7 @@
         }
 
         h1 { margin: 5px; color: #ffb703; font-size: 22px; }
+        p { font-size: 14px; text-align: center; padding: 0 10px; }
         
         canvas {
             background: #222;
@@ -43,7 +44,7 @@
 </head>
 <body>
 
-    <h1>لعبه خفيفه</h1>
+    <h1>لعبة سيارات يوسف</h1>
     <p>استخدم أسهم الكيبورد (يسار/يمين) لتغيير المسار، اجمع الفلوس وتفادى السيارات المعاكسة!</p>
 
     <canvas id="gameCanvas" width="400" height="500"></canvas>
@@ -95,12 +96,11 @@
         }
 
         function spawnElements() {
-            // منع ظهور سيارة جديدة قريبة جداً من الأعلى لضمان الأمان
+            // منع تلاحق أو تراكم السيارات في نفس المسار عن طريق ترك مسافة آمنة رأسياً
             if (Math.random() < 0.02) {
                 let randomLane = Math.floor(Math.random() * 3);
                 
-                // التأكد من عدم تراكب السيارات عند الظهور
-                let tooClose = obstacles.some(obs => obs.y < 0 && obs.lane === randomLane);
+                let tooClose = obstacles.some(obs => obs.y < 120 && obs.lane === randomLane);
                 if (!tooClose) {
                     obstacles.push({
                         lane: randomLane,
@@ -114,11 +114,14 @@
 
             if (Math.random() < 0.02) {
                 let randomLane = Math.floor(Math.random() * 3);
-                coins.push({
-                    lane: randomLane,
-                    y: -30,
-                    size: 14
-                });
+                let coinTooClose = coins.some(c => c.y < 100 && c.lane === randomLane);
+                if (!coinTooClose) {
+                    coins.push({
+                        lane: randomLane,
+                        y: -30,
+                        size: 14
+                    });
+                }
             }
         }
 
@@ -127,13 +130,11 @@
 
             speed += 0.0008;
 
-            // حركة انتقال سريعة وناعمة بين المسارات لتجنب أي تأخير
             player.x += (lanes[player.lane] - player.x) * 0.4;
 
             for (let i = 0; i < obstacles.length; i++) {
                 obstacles[i].y += speed;
 
-                // تقليل مساحة الاصطدام (Hitbox) بشكل أكبر لتكون اللعبة عادلة جداً
                 let marginX = 6;
                 let marginY = 10;
                 if (
@@ -216,7 +217,8 @@
                 
                 ctx.fillStyle = "#fff";
                 ctx.font = "bold 12px Tahoma";
-                ctx.fillText("$", lanes[coins[i].lane] - 4, coins[i].y + 4);
+                ctx.textAlign = "center";
+                ctx.fillText("$", lanes[coins[i].lane], coins[i].y + 4);
             }
 
             drawCar(player.x, player.y + player.height/2, player.color);
@@ -225,28 +227,35 @@
                 drawCar(lanes[obstacles[i].lane], obstacles[i].y + obstacles[i].height/2, obstacles[i].color);
             }
 
+            // عدادات النقاط أثناء اللعب
+            ctx.textAlign = "right";
             ctx.fillStyle = "#fff";
             ctx.font = "15px Tahoma";
-            ctx.fillText("النقاط: " + score, 15, 25);
+            ctx.fillText("النقاط: " + score, 75, 25);
+            
+            ctx.textAlign = "left";
             ctx.fillStyle = "#ffb703";
-            ctx.fillText("الفلوس: $" + moneyCount, 300, 25);
+            ctx.fillText("الفلوس: $" + moneyCount, 325, 25);
 
             if (!gameRunning) {
                 ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+                // جعل محاذاة جميع النصوص في المنتصف تماماً
+                ctx.textAlign = "center";
+
                 ctx.fillStyle = "#e63946";
                 ctx.font = "bold 26px Tahoma";
-                ctx.fillText("إصطدمت السيارة!", 105, 200);
+                ctx.fillText("إصطدمت السيارة!", canvas.width / 2, 180);
 
                 ctx.fillStyle = "#fff";
                 ctx.font = "16px Tahoma";
-                ctx.fillText("النقاط النهائية: " + score, 140, 245);
-                ctx.fillText("الفلوس المجمعة: $" + moneyCount, 130, 275);
+                ctx.fillText("النقاط النهائية: " + score, canvas.width / 2, 230);
+                ctx.fillText("الفلوس المجمعة: $" + moneyCount, canvas.width / 2, 270);
 
                 ctx.fillStyle = "#ffb703";
                 ctx.font = "bold 18px Tahoma";
-                ctx.fillText("اضغط على زر (Enter) لإعادة اللعب", 75, 330);
+                ctx.fillText("اضغط على زر (Enter) لإعادة اللعب", canvas.width / 2, 330);
             }
         }
 
