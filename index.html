@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>موقع يوسف - Bongo Cat</title>
+    <title>موقع يوسف</title>
+    <!-- ربط ملف الإعدادات عشان المتصفح يتعرف على التطبيق -->
+    <link rel="manifest" href="manifest.json">
     <style>
         body {
             margin: 0;
             padding: 0;
             background-color: #1e1e2f;
             color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-family: Tahoma, sans-serif;
             height: 100vh;
             display: flex;
             flex-direction: column;
@@ -21,131 +23,43 @@
 
         .chat-container {
             background: #2a2a40;
-            padding: 25px;
+            padding: 30px;
             border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
             text-align: center;
-            width: 380px;
             border: 1px solid #3f3f5f;
+            z-index: 10;
         }
 
-        h2 { margin-top: 0; color: #ffb703; }
+        h2 { color: #ffb703; margin-top: 0; }
 
-        input[type="text"] {
-            width: 90%;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #4f4f7f;
-            background: #151522;
-            color: #fff;
+        /* زر التنزيل */
+        #install-btn {
+            background-color: #ffb703;
+            color: #1e1e2f;
+            border: none;
+            padding: 12px 25px;
             font-size: 16px;
-            outline: none;
-            transition: border-color 0.3s;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: 0.2s;
+            display: none; /* مخفي بالبداية لين جاهز للتنزيل */
         }
 
-        input[type="text"]:focus {
-            border-color: #ffb703;
+        #install-btn:hover {
+            background-color: #fb8500;
         }
 
-        /* حاوية بونجو كات في أسفل الشاشة */
-        #bongo-cat-wrapper {
+        /* حاوية القطة المتحركة في الأسفل */
+        #bongo-cat {
             position: fixed;
-            bottom: 10px;
+            bottom: 0;
             left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            width: 350px;
             pointer-events: none;
-        }
-
-        .cat-box {
-            position: relative;
-            width: 140px;
-            height: 90px;
-            background: #ffb703;
-            border-radius: 70px 70px 20px 20px;
-            border: 4px solid #151522;
-            box-shadow: 0 6px 0 #151522;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* أذان القطة */
-        .ear {
-            position: absolute;
-            top: -18px;
-            width: 0;
-            height: 0;
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-bottom: 25px solid #ffb703;
-        }
-        .ear.left { left: 15px; transform: rotate(-15deg); }
-        .ear.right { right: 15px; transform: rotate(15deg); }
-
-        /* وجه القطة */
-        .face {
-            font-size: 24px;
-            letter-spacing: 6px;
-            margin-top: 10px;
-        }
-
-        /* الكيبورد بالأفل */
-        .keyboard-desk {
-            width: 180px;
-            height: 25px;
-            background: #4a4e69;
-            border-radius: 6px;
-            border: 3px solid #151522;
-            margin-top: -5px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 0 5px;
-        }
-
-        .key {
-            width: 12px;
-            height: 8px;
-            background: #f2e9e4;
-            border-radius: 2px;
-            transition: transform 0.05s;
-        }
-
-        /* كفوف القطة التفاعلية */
-        .paws {
-            position: absolute;
-            bottom: -10px;
-            width: 100%;
-            display: flex;
-            justify-content: space-around;
-            padding: 0 30px;
-        }
-
-        .paw {
-            width: 22px;
-            height: 16px;
-            background: #fb8500;
-            border: 3px solid #151522;
-            border-radius: 50%;
-            transition: transform 0.05s ease;
-        }
-
-        /* حركة الكفوف عند الكتابة */
-        .typing-active .paw.left-paw {
-            transform: translateY(-12px) translateX(5px);
-        }
-        .typing-active .paw.right-paw {
-            transform: translateY(-2px) translateX(-5px);
-        }
-        
-        .alt-type .paw.left-paw {
-            transform: translateY(-2px) translateX(5px);
-        }
-        .alt-type .paw.right-paw {
-            transform: translateY(-12px) translateX(-5px);
+            transform: translateX(-50%);
         }
     </style>
 </head>
@@ -153,58 +67,43 @@
 
     <div class="chat-container">
         <h2>موقع يوسف</h2>
-        <p>جرب تكتب أي شي وشوف تفاعل القطة:</p>
-        <input type="text" id="userInput" placeholder="اكتب هنا...">
+        <p>مرحباً بك! التطبيق جاهز للعمل.</p>
+        <!-- زر التنزيل الظاهر للمستخدم -->
+        <button id="install-btn">تحميل تطبيق يوسف</button>
     </div>
 
-    <!-- رسمة Bongo Cat -->
-    <div id="bongo-cat-wrapper">
-        <div class="cat-box" id="catBody">
-            <div class="ear left"></div>
-            <div class="ear right"></div>
-            <div class="face">>^.^<</div>
-            <div class="paws">
-                <div class="paw left-paw"></div>
-                <div class="paw right-paw"></div>
-            </div>
-        </div>
-        <div class="keyboard-desk">
-            <div class="key"></div>
-            <div class="key"></div>
-            <div class="key"></div>
-            <div class="key"></div>
-            <div class="key"></div>
-        </div>
-    </div>
+    <!-- القطة المتحركة (تأكد أن اسم الصورة cat.gif) -->
+    <img id="bongo-cat" src="cat.gif" alt="Bongo Cat">
 
     <script>
-        const inputField = document.getElementById('userInput');
-        const catBody = document.getElementById('catBody');
-        let toggleHand = false;
+        let deferredPrompt;
+        const installBtn = document.getElementById('install-btn');
 
-        // التفاعل السريع مع كل حرف يُكتب
-        inputField.addEventListener('keydown', () => {
-            toggleHand = !toggleHand;
-            if (toggleHand) {
-                catBody.classList.add('typing-active');
-                catBody.classList.remove('alt-type');
-            } else {
-                catBody.classList.remove('typing-active');
-                catBody.classList.add('alt-type');
-            }
-
-            // إرجاع الكفوف لوضعيتها العادية عند التوقف السريع
-            clearTimeout(window.catTimeout);
-            window.catTimeout = setTimeout(() => {
-                catBody.classList.remove('typing-active');
-                catBody.classList.remove('alt-type');
-            }, 150);
+        // استقبال حدث التثبيت من المتصفح
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.style.display = 'block'; // إظهار الزر للمستخدم
         });
 
-        // حركة خفيفة للقطة مع الماوس
+        // عند الضغط على زر التنزيل
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log('تم قبول التثبيت');
+                }
+                deferredPrompt = null;
+                installBtn.style.display = 'none';
+            }
+        });
+
+        // حركة القطة مع الماوس
         document.addEventListener('mousemove', (e) => {
-            let moveX = (e.clientX / window.innerWidth - 0.5) * 20;
-            document.getElementById('bongo-cat-wrapper').style.transform = `translateX(calc(-50% + ${moveX}px))`;
+            const cat = document.getElementById('bongo-cat');
+            let moveX = (e.clientX / window.innerWidth - 0.5) * 40; 
+            cat.style.transform = `translateX(calc(-50% + ${moveX}px))`;
         });
     </script>
 
