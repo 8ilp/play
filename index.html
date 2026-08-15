@@ -2,73 +2,265 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>سباوي من سوق الجمعه</title>
     <style>
-        body { margin: 0; background: #111; color: #fff; font-family: Tahoma, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        canvas { background: #222; border: 4px solid #ffb703; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); outline: none; }
-        #install-btn { background-color: #ffb703; color: #111; border: none; padding: 10px 20px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+        body {
+            margin: 0;
+            background: #111;
+            color: #fff;
+            font-family: Tahoma, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        h1 { margin: 5px; color: #ffb703; font-size: 22px; }
+        
+        canvas {
+            background: #222;
+            border: 4px solid #ffb703;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        #install-btn {
+            background-color: #ffb703;
+            color: #111;
+            border: none;
+            padding: 8px 18px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        #install-btn:hover { background-color: #fb8500; }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="360" height="480" tabindex="1"></canvas>
+
+    <h1>لعبه خفيفه</h1>
+    <p>استخدم أسهم الكيبورد (يسار/يمين) لتغيير المسار، اجمع الفلوس وتفادى السيارات المعاكسة!</p>
+
+    <canvas id="gameCanvas" width="400" height="500"></canvas>
     <button id="install-btn">تحميل اللعبة كتطبيق</button>
+
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        canvas.focus();
-        let player = { lane: 1, x: 180, y: 360, width: 32, height: 56, color: "#3a86ff" };
-        const lanes = [95, 180, 265]; 
-        let obstacles = [], coins = [], score = 0, moneyCount = 0, gameRunning = true, speed = 4, spawnTimer = 0;
+
+        let player = {
+            lane: 1, 
+            x: 200,
+            y: 380,
+            width: 34,
+            height: 60,
+            color: "#3a86ff"
+        };
+
+        const lanes = [110, 200, 290]; 
+        let obstacles = [];
+        let coins = [];
+        let score = 0;
+        let moneyCount = 0;
+        let gameRunning = true;
+        let speed = 4;
 
         document.addEventListener("keydown", (e) => {
             if (gameRunning) {
-                if (e.key === "ArrowRight" && player.lane < 2) player.lane++;
-                else if (e.key === "ArrowLeft" && player.lane > 0) player.lane--;
-            } else if (e.key === "Enter") {
-                player.lane = 1; obstacles = []; coins = []; score = 0; moneyCount = 0; speed = 4; gameRunning = true;
+                if (e.key === "ArrowRight" && player.lane < 2) {
+                    player.lane++;
+                } else if (e.key === "ArrowLeft" && player.lane > 0) {
+                    player.lane--;
+                }
+            } else {
+                if (e.key === "Enter") {
+                    resetGame();
+                }
             }
         });
 
+        function resetGame() {
+            player.lane = 1;
+            obstacles = [];
+            coins = [];
+            score = 0;
+            moneyCount = 0;
+            speed = 4;
+            gameRunning = true;
+        }
+
+        function spawnElements() {
+            // منع ظهور سيارة جديدة قريبة جداً من الأعلى لضمان الأمان
+            if (Math.random() < 0.02) {
+                let randomLane = Math.floor(Math.random() * 3);
+                
+                // التأكد من عدم تراكب السيارات عند الظهور
+                let tooClose = obstacles.some(obs => obs.y < 0 && obs.lane === randomLane);
+                if (!tooClose) {
+                    obstacles.push({
+                        lane: randomLane,
+                        y: -100,
+                        width: 34,
+                        height: 60,
+                        color: "#e63946"
+                    });
+                }
+            }
+
+            if (Math.random() < 0.02) {
+                let randomLane = Math.floor(Math.random() * 3);
+                coins.push({
+                    lane: randomLane,
+                    y: -30,
+                    size: 14
+                });
+            }
+        }
+
         function update() {
             if (!gameRunning) return;
-            speed += 0.0006;
+
+            speed += 0.0008;
+
+            // حركة انتقال سريعة وناعمة بين المسارات لتجنب أي تأخير
             player.x += (lanes[player.lane] - player.x) * 0.4;
-            spawnTimer++;
-            if (spawnTimer > 45) {
-                spawnTimer = 0;
-                let availableLanes = [0, 1, 2];
-                let safeLaneIndex = Math.floor(Math.random() * 3);
-                availableLanes.splice(safeLaneIndex, 1);
-                availableLanes.forEach(lane => obstacles.push({ lane, y: -100, width: 32, height: 56, color: "#e63946" }));
-                if (Math.random() < 0.7) coins.push({ lane: safeLaneIndex, y: -30, size: 13 });
+
+            for (let i = 0; i < obstacles.length; i++) {
+                obstacles[i].y += speed;
+
+                // تقليل مساحة الاصطدام (Hitbox) بشكل أكبر لتكون اللعبة عادلة جداً
+                let marginX = 6;
+                let marginY = 10;
+                if (
+                    obstacles[i].lane === player.lane &&
+                    obstacles[i].y + obstacles[i].height - marginY > player.y + marginY &&
+                    obstacles[i].y + marginY < player.y + player.height - marginY
+                ) {
+                    gameRunning = false;
+                }
             }
-            obstacles.forEach(obs => {
-                obs.y += speed;
-                if (obs.lane === player.lane && obs.y + 46 > 370 && obs.y < 416) gameRunning = false;
+
+            for (let i = 0; i < coins.length; i++) {
+                coins[i].y += speed;
+                if (
+                    coins[i].lane === player.lane &&
+                    coins[i].y + coins[i].size > player.y &&
+                    coins[i].y - coins[i].size < player.y + player.height
+                ) {
+                    moneyCount += 10;
+                    coins.splice(i, 1);
+                    i--;
+                }
+            }
+
+            obstacles = obstacles.filter(obs => {
+                if (obs.y > canvas.height) {
+                    score += 5;
+                    return false;
+                }
+                return true;
             });
-            coins.forEach((c, i) => {
-                c.y += speed;
-                if (c.lane === player.lane && c.y + 13 > 360 && c.y - 13 < 416) { moneyCount += 10; coins.splice(i, 1); }
-            });
-            obstacles = obstacles.filter(o => { if(o.y > 480) { score += 5; return false; } return true; });
+
+            coins = coins.filter(c => c.y < canvas.height);
+
+            spawnElements();
+        }
+
+        function drawCar(x, y, color) {
+            ctx.save();
+            ctx.translate(x, y);
+            
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.roundRect(-17, -30, 34, 60, 8);
+            ctx.fill();
+
+            ctx.fillStyle = "#111";
+            ctx.fillRect(-13, -15, 26, 15);
+            ctx.fillRect(-13, 10, 26, 10);
+
+            ctx.fillStyle = "#000";
+            ctx.fillRect(-21, -20, 6, 14);
+            ctx.fillRect(15, -20, 6, 14);
+            ctx.fillRect(-21, 12, 6, 14);
+            ctx.fillRect(15, 12, 6, 14);
+
+            ctx.restore();
         }
 
         function draw() {
-            ctx.clearRect(0, 0, 360, 480);
-            ctx.strokeStyle = "#444"; ctx.setLineDash([12, 12]);
-            ctx.beginPath(); ctx.moveTo(137, 0); ctx.lineTo(137, 480); ctx.moveTo(222, 0); ctx.lineTo(222, 480); ctx.stroke();
-            coins.forEach(c => { ctx.fillStyle = "#ffb703"; ctx.beginPath(); ctx.arc(lanes[c.lane], c.y, 13, 0, Math.PI * 2); ctx.fill(); });
-            ctx.fillStyle = player.color; ctx.fillRect(player.x - 16, player.y - 28, 32, 56);
-            obstacles.forEach(o => { ctx.fillStyle = o.color; ctx.fillRect(lanes[o.lane] - 16, o.y - 28, 32, 56); });
-            ctx.fillStyle = "#fff"; ctx.font = "14px Tahoma"; ctx.fillText("النقاط: " + score, 10, 20); ctx.fillText("الفلوس: $" + moneyCount, 280, 20);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = "#444";
+            ctx.lineWidth = 2;
+            ctx.setLineDash([15, 15]);
+            ctx.beginPath();
+            ctx.moveTo(155, 0); ctx.lineTo(155, canvas.height);
+            ctx.moveTo(245, 0); ctx.lineTo(245, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            for (let i = 0; i < coins.length; i++) {
+                ctx.fillStyle = "#ffb703";
+                ctx.beginPath();
+                ctx.arc(lanes[coins[i].lane], coins[i].y, coins[i].size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = "#d4af37";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.fillStyle = "#fff";
+                ctx.font = "bold 12px Tahoma";
+                ctx.fillText("$", lanes[coins[i].lane] - 4, coins[i].y + 4);
+            }
+
+            drawCar(player.x, player.y + player.height/2, player.color);
+
+            for (let i = 0; i < obstacles.length; i++) {
+                drawCar(lanes[obstacles[i].lane], obstacles[i].y + obstacles[i].height/2, obstacles[i].color);
+            }
+
+            ctx.fillStyle = "#fff";
+            ctx.font = "15px Tahoma";
+            ctx.fillText("النقاط: " + score, 15, 25);
+            ctx.fillStyle = "#ffb703";
+            ctx.fillText("الفلوس: $" + moneyCount, 300, 25);
+
             if (!gameRunning) {
-                ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(0,0,360,480);
-                ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.font = "20px Tahoma"; ctx.fillText("اضغط (Enter) لإعادة اللعب", 180, 240);
+                ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = "#e63946";
+                ctx.font = "bold 26px Tahoma";
+                ctx.fillText("إصطدمت السيارة!", 105, 200);
+
+                ctx.fillStyle = "#fff";
+                ctx.font = "16px Tahoma";
+                ctx.fillText("النقاط النهائية: " + score, 140, 245);
+                ctx.fillText("الفلوس المجمعة: $" + moneyCount, 130, 275);
+
+                ctx.fillStyle = "#ffb703";
+                ctx.font = "bold 18px Tahoma";
+                ctx.fillText("اضغط على زر (Enter) لإعادة اللعب", 75, 330);
             }
         }
-        function loop() { update(); draw(); requestAnimationFrame(loop); }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
         loop();
-        document.getElementById("install-btn").onclick = () => alert('افتح إعدادات المتصفح واختر "تثبيت التطبيق"');
+
+        document.getElementById("install-btn").addEventListener("click", () => {
+            alert('لتثبيت اللعبة كتطبيق على جهازك، افتح قائمة المتصفح (النقاط الثلاث) واختار "تثبيت التطبيق" (Install app).');
+        });
     </script>
 </body>
 </html>
