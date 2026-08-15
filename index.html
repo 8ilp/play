@@ -1,136 +1,212 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>💬 شات</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0e1a;--bg2:#141c2b;--bg3:#0d1422;--br:#1a2a4a;--tx:#e0e7f0;--tx2:#94a3b8;--ac:#38bdf8;--ac2:#818cf8;--gr:#4ade80;--rd:#f87171;--or:#fbbf24;--pu:#a855f7}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}
-.container{max-width:1000px;width:100%;background:var(--bg2);border-radius:24px;padding:25px;border:1px solid var(--br);box-shadow:0 20px 60px rgba(0,0,0,.8),0 0 40px rgba(56,189,248,.05)}
-.login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;gap:20px}
-.login-screen .icon{font-size:4rem;margin-bottom:-10px}
-.login-screen h1{font-size:2.8rem;font-weight:900;background:linear-gradient(135deg,#38bdf8,#818cf8,#a855f7);-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:-1px}
-.login-screen .sub{color:var(--tx2);font-size:.95rem;margin-top:-5px}
-.login-screen .sub span{color:var(--gr);font-weight:600}
-.login-screen input{padding:14px 24px;border-radius:14px;border:2px solid var(--br);background:var(--bg3);color:var(--tx);font-size:1.1rem;width:100%;max-width:380px;outline:none;transition:.3s;text-align:center;font-weight:500}
-.login-screen input:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(56,189,248,.15)}
-.login-screen input::placeholder{color:#4a5a7a;font-weight:400}
-.login-screen .btn{background:linear-gradient(135deg,#38bdf8,#818cf8);color:#0a0e1a;border:none;padding:14px 48px;border-radius:14px;font-weight:700;font-size:1.1rem;cursor:pointer;transition:.3s;width:100%;max-width:380px;letter-spacing:.5px}
-.login-screen .btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(56,189,248,.35)}
-.login-screen .btn:active{transform:scale(.97)}
-.login-screen .footer-text{color:var(--tx2);font-size:.75rem;margin-top:5px}
-.login-screen .footer-text span{color:var(--or)}
-.chat-area{display:none;flex-direction:column;gap:15px}
-.chat-area.show{display:flex}
-.chat-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:15px;border-bottom:1px solid var(--br);flex-wrap:wrap;gap:10px}
-.chat-header .title{font-size:1.4rem;font-weight:800;color:var(--ac);display:flex;align-items:center;gap:10px}
-.chat-header .title .beta{font-size:.55rem;background:var(--bg3);color:var(--or);padding:2px 12px;border-radius:12px;border:1px solid var(--or);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.chat-header .right{display:flex;align-items:center;gap:15px;flex-wrap:wrap}
-.chat-header .users-online{color:var(--tx2);font-size:.9rem;font-weight:500}
-.chat-header .users-online span{color:var(--gr);font-weight:700}
-.chat-header .refresh-btn{background:var(--bg3);border:1px solid var(--br);color:var(--tx2);padding:6px 14px;border-radius:10px;cursor:pointer;font-size:.75rem;transition:.3s;display:flex;align-items:center;gap:6px}
-.chat-header .refresh-btn:hover{background:var(--br);color:var(--tx)}
-.chat-header .refresh-btn .notif-badge{background:var(--rd);color:#fff;border-radius:50%;padding:0 6px;font-size:.6rem;font-weight:700}
-.chat-header .chat-mode{display:flex;gap:8px}
-.chat-header .mode-btn{background:transparent;border:1px solid var(--br);color:var(--tx2);padding:4px 14px;border-radius:20px;cursor:pointer;font-size:.75rem;transition:.3s;font-weight:600}
-.chat-header .mode-btn:hover{background:var(--bg3)}
-.chat-header .mode-btn.active{background:var(--ac);color:#0a0e1a;border-color:var(--ac)}
-.main-chat{display:flex;gap:15px;min-height:450px}
-.users-list{width:200px;background:var(--bg3);border-radius:14px;padding:15px;border:1px solid var(--br);max-height:450px;overflow-y:auto}
-.users-list h4{color:var(--tx2);font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;text-align:center;font-weight:600}
-.user-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;cursor:pointer;transition:.25s;margin-bottom:3px;font-size:.9rem;border:1px solid transparent;position:relative}
-.user-item:hover{background:rgba(56,189,248,.08);border-color:rgba(56,189,248,.2);transform:translateX(-3px)}
-.user-item.active{border-color:var(--ac);background:rgba(56,189,248,.08)}
-.user-item .dot{width:8px;height:8px;border-radius:50%;background:var(--gr);display:inline-block;animation:pulse 2s infinite;flex-shrink:0}
-.user-item .dot.offline{background:#4a5a7a;animation:none}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.user-item .name{flex:1;color:var(--tx);font-weight:500;font-size:.85rem}
-.user-item .name .me{color:var(--tx2);font-size:.7rem;font-weight:400}
-.user-item .private-badge{font-size:.5rem;color:var(--or);background:rgba(251,191,36,.1);padding:2px 8px;border-radius:10px;border:1px solid rgba(251,191,36,.2);font-weight:600;text-transform:uppercase}
-.user-item .notif{position:absolute;top:-4px;right:-4px;background:var(--rd);color:#fff;border-radius:50%;width:18px;height:18px;font-size:.6rem;display:flex;align-items:center;justify-content:center;font-weight:700}
-.messages-area{flex:1;background:var(--bg3);border-radius:14px;padding:15px;border:1px solid var(--br);max-height:450px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
-.messages-area .empty-state{color:var(--tx2);text-align:center;padding:50px 0;font-size:.95rem;font-weight:400}
-.messages-area .empty-state .emoji{font-size:2.5rem;display:block;margin-bottom:10px}
-.message{max-width:82%;padding:10px 16px;border-radius:14px;font-size:.92rem;line-height:1.6;word-wrap:break-word;animation:fadeIn .25s ease}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.message.own{background:linear-gradient(135deg,#2563eb,#3b82f6);align-self:flex-end;border-bottom-left-radius:4px;color:#fff;box-shadow:0 2px 10px rgba(37,99,235,.2)}
-.message.other{background:var(--bg2);align-self:flex-start;border-bottom-right-radius:4px;border:1px solid var(--br)}
-.message.private{background:linear-gradient(135deg,#2a1a4a,#4a1a6a);align-self:center;border:1px solid var(--pu);border-radius:14px;max-width:90%}
-.message .sender{font-size:.7rem;color:var(--tx2);margin-bottom:2px;display:block;font-weight:600}
-.message .sender.private-label{color:var(--pu)}
-.message .time{font-size:.55rem;color:var(--tx2);margin-top:4px;display:block;text-align:left;opacity:.7}
-.message.system{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.15);align-self:center;color:var(--or);font-size:.8rem;border-radius:20px;padding:6px 18px;max-width:70%}
-.message.request{background:rgba(168,85,247,.08);border:1px solid var(--pu);align-self:center;color:var(--pu);font-size:.8rem;border-radius:20px;padding:6px 18px;max-width:70%;display:flex;align-items:center;gap:12px}
-.message.request .accept-btn{background:var(--gr);color:#0a0e1a;border:none;padding:4px 14px;border-radius:12px;font-weight:700;cursor:pointer;font-size:.75rem}
-.message.request .reject-btn{background:var(--rd);color:#fff;border:none;padding:4px 14px;border-radius:12px;font-weight:700;cursor:pointer;font-size:.75rem}
-.input-area{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-.input-area .private-indicator{color:var(--pu);font-size:.8rem;padding:5px 14px;background:rgba(168,85,247,.08);border-radius:10px;border:1px solid rgba(168,85,247,.15);display:none;align-items:center;gap:8px;font-weight:500;width:100%}
-.input-area .private-indicator.show{display:inline-flex}
-.input-area .private-indicator .close{color:var(--rd);cursor:pointer;font-weight:700;margin-right:5px;padding:0 4px;border-radius:4px;transition:.2s}
-.input-area .private-indicator .close:hover{background:rgba(248,113,113,.1)}
-.input-area input{flex:1;padding:12px 18px;border-radius:12px;border:2px solid var(--br);background:var(--bg3);color:var(--tx);outline:none;transition:.3s;min-width:150px;font-size:.95rem}
-.input-area input:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(56,189,248,.1)}
-.input-area input:disabled{opacity:.4;cursor:not-allowed}
-.input-area .btn{background:linear-gradient(135deg,#38bdf8,#818cf8);color:#0a0e1a;border:none;padding:12px 28px;border-radius:12px;font-weight:700;font-size:.95rem;cursor:pointer;transition:.3s;white-space:nowrap}
-.input-area .btn:hover{transform:translateY(-2px);box-shadow:0 6px 25px rgba(56,189,248,.3)}
-.input-area .btn:active{transform:scale(.97)}
-.input-area .btn.private-btn{background:linear-gradient(135deg,#7c3aed,#a855f7);box-shadow:0 4px 20px rgba(124,58,237,.3)}
-.users-list::-webkit-scrollbar,.messages-area::-webkit-scrollbar{width:4px}
-.users-list::-webkit-scrollbar-track{background:var(--bg3)}
-.users-list::-webkit-scrollbar-thumb{background:var(--br);border-radius:10px}
-.messages-area::-webkit-scrollbar-track{background:var(--bg3)}
-.messages-area::-webkit-scrollbar-thumb{background:var(--br);border-radius:10px}
-@media(max-width:768px){.main-chat{flex-direction:column}.users-list{width:100%;max-height:150px}.messages-area{max-height:300px}.login-screen h1{font-size:2rem}.container{padding:18px}.chat-header{flex-direction:column;align-items:stretch}}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>موقع يوسف - Bongo Cat</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1e1e2f;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            background: #2a2a40;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            text-align: center;
+            width: 380px;
+            border: 1px solid #3f3f5f;
+        }
+
+        h2 { margin-top: 0; color: #ffb703; }
+
+        input[type="text"] {
+            width: 90%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #4f4f7f;
+            background: #151522;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #ffb703;
+        }
+
+        /* حاوية بونجو كات في أسفل الشاشة */
+        #bongo-cat-wrapper {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .cat-box {
+            position: relative;
+            width: 140px;
+            height: 90px;
+            background: #ffb703;
+            border-radius: 70px 70px 20px 20px;
+            border: 4px solid #151522;
+            box-shadow: 0 6px 0 #151522;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* أذان القطة */
+        .ear {
+            position: absolute;
+            top: -18px;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 25px solid #ffb703;
+        }
+        .ear.left { left: 15px; transform: rotate(-15deg); }
+        .ear.right { right: 15px; transform: rotate(15deg); }
+
+        /* وجه القطة */
+        .face {
+            font-size: 24px;
+            letter-spacing: 6px;
+            margin-top: 10px;
+        }
+
+        /* الكيبورد بالأفل */
+        .keyboard-desk {
+            width: 180px;
+            height: 25px;
+            background: #4a4e69;
+            border-radius: 6px;
+            border: 3px solid #151522;
+            margin-top: -5px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 5px;
+        }
+
+        .key {
+            width: 12px;
+            height: 8px;
+            background: #f2e9e4;
+            border-radius: 2px;
+            transition: transform 0.05s;
+        }
+
+        /* كفوف القطة التفاعلية */
+        .paws {
+            position: absolute;
+            bottom: -10px;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 30px;
+        }
+
+        .paw {
+            width: 22px;
+            height: 16px;
+            background: #fb8500;
+            border: 3px solid #151522;
+            border-radius: 50%;
+            transition: transform 0.05s ease;
+        }
+
+        /* حركة الكفوف عند الكتابة */
+        .typing-active .paw.left-paw {
+            transform: translateY(-12px) translateX(5px);
+        }
+        .typing-active .paw.right-paw {
+            transform: translateY(-2px) translateX(-5px);
+        }
+        
+        .alt-type .paw.left-paw {
+            transform: translateY(-2px) translateX(5px);
+        }
+        .alt-type .paw.right-paw {
+            transform: translateY(-12px) translateX(-5px);
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-<div class="login-screen" id="loginScreen"><div class="icon">💬</div><h1>شات</h1><p class="sub">تواصل مع <span>أصدقائك</span> بسهولة</p><input type="text" id="usernameInput" placeholder="✏️ اختر اسمك..." maxlength="20" autocomplete="off"><button class="btn" id="joinBtn">🚀 دخول</button><p class="footer-text">🔒 خاص · آمن · <span>بدون حفظ</span></p></div>
-<div class="chat-area" id="chatArea">
-<div class="chat-header">
-<div class="title">💬 شات <span class="beta">Beta</span></div>
-<div class="right">
-<div class="chat-mode"><button class="mode-btn active" id="globalBtn">🌍 عام</button><button class="mode-btn" id="privateBtn">🔒 خاص</button></div>
-<div class="users-online">👥 <span id="onlineCount">1</span></div>
-<button class="refresh-btn" id="refreshBtn">🔄 تحديث <span class="notif-badge" id="notifBadge" style="display:none;">0</span></button>
-</div>
-</div>
-<div class="main-chat">
-<div class="users-list"><h4>📋 المستخدمين</h4><div id="usersContainer"></div></div>
-<div class="messages-area" id="messagesArea"><div class="empty-state"><span class="emoji">💬</span>مرحباً! ابدأ المحادثة...</div></div>
-</div>
-<div class="input-area">
-<div class="private-indicator" id="privateIndicator">🔒 مراسلة خاصة مع <span id="privateTarget"></span><span class="close" id="closePrivate">✕</span></div>
-<input type="text" id="messageInput" placeholder="✍️ اكتب رسالتك..." disabled autocomplete="off">
-<button class="btn" id="sendBtn">📤 إرسال</button>
-</div>
-</div>
-</div>
-<script>
-(function(){
-'use strict';
-let cu='',pr=null,us=[],ms=[],mid=0,notifs={},mode='global',newMsg=0;
-const ls=document.getElementById('loginScreen'),ca=document.getElementById('chatArea'),ui=document.getElementById('usernameInput'),jb=document.getElementById('joinBtn'),uc=document.getElementById('usersContainer'),ma=document.getElementById('messagesArea'),mi=document.getElementById('messageInput'),sb=document.getElementById('sendBtn'),oc=document.getElementById('onlineCount'),pi=document.getElementById('privateIndicator'),pt=document.getElementById('privateTarget'),cp=document.getElementById('closePrivate'),gb=document.getElementById('globalBtn'),pb=document.getElementById('privateBtn'),rb=document.getElementById('refreshBtn'),nb=document.getElementById('notifBadge');
-function st(t){const d=document.createElement('div');d.textContent=t;return d.textContent}
-function eh(t){const m={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'};return t.replace(/[&<>"']/g,function(c){return m[c]})}
-function au(n){if(!us.find(u=>u.name===n)){us.push({name:n,online:true});ul();uo();return true}return false}
-function ru(n){us=us.filter(u=>u.name!==n);ul();uo();if(pr===n){pr=null;up()}}
-function ul(){if(us.length===0){uc.innerHTML='<div style="color:#64748b;font-size:.8rem;text-align:center;">لا يوجد مستخدمون</div>';return}uc.innerHTML=us.map(u=>'<div class="user-item'+(u.name===cu?' active':'')+'" onclick="spc(\''+u.name+'\')"><span class="dot'+(u.online?'':' offline')+'"></span><span class="name">'+eh(u.name)+(u.name===cu?' <span class="me">(أنت)</span>':'')+'</span>'+(pr===u.name?'<span class="private-badge">🔒 خاص</span>':'')+(notifs[u.name]?('<span class="notif">'+notifs[u.name]+'</span>'):'')+'</div>').join('')}
-function uo(){const on=us.filter(u=>u.online).length;oc.textContent=on}
-function am(t,s,p=false,tg=null){const msg={id:mid++,text:st(t),sender:st(s),isPrivate:p,target:tg?st(tg):null,time:new Date().toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'})};ms.push(msg);if(p&&tg===cu&&s!==cu){notifs[s]=(notifs[s]||0)+1;newMsg++;nb.textContent=newMsg;nb.style.display='block'}rm()}
-function rm(){let f=ms;if(mode==='private'&&pr){f=ms.filter(m=>(m.isPrivate&&(m.sender===cu||m.sender===pr)&&(m.target===cu||m.target===pr))||(m.sender===cu&&m.target===pr)||(m.sender===pr&&m.target===cu))}else if(mode==='private'){f=ms.filter(m=>m.isPrivate&&(m.sender===cu||m.target===cu))}else{f=ms.filter(m=>!m.isPrivate)}if(f.length===0){ma.innerHTML='<div class="empty-state"><span class="emoji">💬</span>'+(mode==='private'?(pr?'🔒 محادثة خاصة مع '+eh(pr):'🔒 لا توجد رسائل خاصة'):'مرحباً! ابدأ المحادثة...')+'</div>';return}ma.innerHTML=f.map(m=>{const ow=m.sender===cu,prv=m.isPrivate;let cls='message';if(ow)cls+=' own';else if(prv)cls+=' private';else cls+=' other';let lab='';if(prv&&!ow)lab='<span class="sender private-label">🔒 خاص من '+eh(m.sender)+'</span>';else if(!ow)lab='<span class="sender">'+eh(m.sender)+'</span>';else if(prv)lab='<span class="sender private-label">🔒 خاص إلى '+eh(m.target)+'</span>';if(m.sender==='النظام')cls+=' system';return'<div class="'+cls+'">'+lab+eh(m.text)+'<span class="time">'+m.time+'</span></div>'}).join('');ma.scrollTop=ma.scrollHeight}
-window.spc=function(n){if(n===cu)return;if(pr===n){pr=null;up();rm();return}pr=n;up();rm();mi.focus()};
-function up(){if(pr){pi.classList.add('show');pt.textContent=eh(pr)}else{pi.classList.remove('show')}}
-function sm(){const t=mi.value.trim();if(!t||!cu)return;if(pr){am(t,cu,true,pr)}else{am(t,cu,false)}mi.value='';mi.focus()}
-function setMode(m){mode=m;gb.classList.toggle('active',m==='global');pb.classList.toggle('active',m==='private');if(m==='global')pr=null;up();rm()}
-function refresh(){ul();rm();if(newMsg>0){newMsg=0;nb.style.display='none'}}
-function jc(){const n=ui.value.trim();if(!n||n.length<2){alert('⚠️ الاسم لا يقل عن حرفين');return}if(n.length>20){alert('⚠️ الاسم لا يزيد عن 20 حرف');return}if(n.includes('<')||n.includes('>')||n.includes('script')){alert('⚠️ اسم غير صالح');return}cu=st(n);if(!au(cu)){alert('⚠️ هذا الاسم مستخدم');return}ls.style.display='none';ca.classList.add('show');mi.disabled=false;mi.focus();am('👋 مرحباً '+cu+'! أهلاً بك في شات','النظام',false);am('💡 اضغط على اسم مستخدم لمراسلته خاصاً','النظام',false)}
-jb.addEventListener('click',jc);ui.addEventListener('keydown',(e)=>{if(e.key==='Enter')jc()});sb.addEventListener('click',sm);mi.addEventListener('keydown',(e)=>{if(e.key==='Enter')sm()});cp.addEventListener('click',()=>{pr=null;up();rm()});gb.addEventListener('click',()=>setMode('global'));pb.addEventListener('click',()=>setMode('private'));rb.addEventListener('click',refresh);
-window.addEventListener('beforeunload',function(){if(cu){ru(cu)}});
-console.log('💬 شات جاهز!');
-})();
-</script>
+
+    <div class="chat-container">
+        <h2>موقع يوسف</h2>
+        <p>جرب تكتب أي شي وشوف تفاعل القطة:</p>
+        <input type="text" id="userInput" placeholder="اكتب هنا...">
+    </div>
+
+    <!-- رسمة Bongo Cat -->
+    <div id="bongo-cat-wrapper">
+        <div class="cat-box" id="catBody">
+            <div class="ear left"></div>
+            <div class="ear right"></div>
+            <div class="face">>^.^<</div>
+            <div class="paws">
+                <div class="paw left-paw"></div>
+                <div class="paw right-paw"></div>
+            </div>
+        </div>
+        <div class="keyboard-desk">
+            <div class="key"></div>
+            <div class="key"></div>
+            <div class="key"></div>
+            <div class="key"></div>
+            <div class="key"></div>
+        </div>
+    </div>
+
+    <script>
+        const inputField = document.getElementById('userInput');
+        const catBody = document.getElementById('catBody');
+        let toggleHand = false;
+
+        // التفاعل السريع مع كل حرف يُكتب
+        inputField.addEventListener('keydown', () => {
+            toggleHand = !toggleHand;
+            if (toggleHand) {
+                catBody.classList.add('typing-active');
+                catBody.classList.remove('alt-type');
+            } else {
+                catBody.classList.remove('typing-active');
+                catBody.classList.add('alt-type');
+            }
+
+            // إرجاع الكفوف لوضعيتها العادية عند التوقف السريع
+            clearTimeout(window.catTimeout);
+            window.catTimeout = setTimeout(() => {
+                catBody.classList.remove('typing-active');
+                catBody.classList.remove('alt-type');
+            }, 150);
+        });
+
+        // حركة خفيفة للقطة مع الماوس
+        document.addEventListener('mousemove', (e) => {
+            let moveX = (e.clientX / window.innerWidth - 0.5) * 20;
+            document.getElementById('bongo-cat-wrapper').style.transform = `translateX(calc(-50% + ${moveX}px))`;
+        });
+    </script>
+
 </body>
 </html>
